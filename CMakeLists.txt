@@ -79,6 +79,10 @@ if(PS2X_IS_ARM_TARGET)
     endif()
 endif()
 
+if(NOT MSVC AND NOT PS2X_IS_ARM_TARGET)
+    add_compile_options(-msse4.1)
+endif()
+
 if(PS2X_BUILD_RECOMP)
     add_subdirectory("ps2xRecomp")
 endif()

@@ -1313,6 +1313,13 @@ bool PS2Memory::writeIORegister(uint32_t address, uint32_t value)
 
             if ((channelBase == 0x1000A000u || channelBase == 0x10009000u || channelBase == 0x10008000u) && (m_gsVRAM || channelBase == 0x10008000u))
             {
+                if (channelBase == 0x1000A000u)
+                {
+                    std::cerr << "[GIF DMA CHCR Write] val=0x" << std::hex << value
+                              << " madr=0x" << madr
+                              << " tadr=0x" << m_ioRegisters[channelBase + 0x30]
+                              << " qwc=0x" << qwc << std::dec << std::endl;
+                }
                 auto enqueueTransfer = [&](uint32_t srcAddr, uint32_t qwCount)
                 {
                     if (qwCount == 0)

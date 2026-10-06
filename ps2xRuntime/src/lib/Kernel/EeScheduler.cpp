@@ -357,10 +357,12 @@ void EeScheduler::postEvent(EeEvent event)
 bool EeScheduler::checkpointDue(uint32_t cycles) noexcept
 {
     accountCycles(cycles);
+    ++m_checkpointCalls;
 
     if (m_checkpointPending.load(std::memory_order_acquire) ||
         m_stopRequested.load(std::memory_order_acquire))
     {
+        ++m_checkpointHits;
         return true;
     }
 
@@ -368,6 +370,7 @@ bool EeScheduler::checkpointDue(uint32_t cycles) noexcept
     if (nextEventCycle != 0u && m_eeCycle >= nextEventCycle)
     {
         m_checkpointPending.store(true, std::memory_order_release);
+        ++m_checkpointHits;
         return true;
     }
 
@@ -381,6 +384,7 @@ bool EeScheduler::checkpointDue(uint32_t cycles) noexcept
     {
         m_rescheduleRequested = true;
         m_timeSliceExpired = true;
+        ++m_checkpointHits;
         return true;
     }
 
@@ -838,6 +842,7 @@ int EeScheduler::createSemaphore(int initCount, int maxCount, uint32_t attr, uin
     semaphore.attr = attr;
     semaphore.option = option;
     m_semaphores.emplace(id, std::move(semaphore));
+    m_lastCreatedSemaphoreId = id;
     publishSnapshot();
     return id;
 }

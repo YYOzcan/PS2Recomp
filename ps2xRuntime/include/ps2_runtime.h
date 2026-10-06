@@ -291,6 +291,11 @@ public:
     void run();
 
     [[nodiscard]] ps2x::iop::ModuleLoadResult loadIopModule(std::string_view path, const void *arguments = nullptr, uint32_t argumentSize = 0);
+    // Raw-SIFCMD completion assist (Gradius-style boot): when armed, EE->IOP
+    // SIFCMD BIND packets for HLE-bindable sids are completed synchronously
+    // (client server-word fill + waiter release). Default off.
+    void setRawSifCompletionAssist(bool enabled) noexcept { m_rawSifCompletionAssist = enabled; }
+    [[nodiscard]] bool rawSifCompletionAssist() const noexcept { return m_rawSifCompletionAssist; }
     [[nodiscard]] ps2x::iop::ModuleLoadResult loadIopModuleBuffer(uint32_t guestAddress, const void *arguments = nullptr, uint32_t argumentSize = 0);
     [[nodiscard]] bool stopIopModule(int32_t moduleId, int32_t *result = nullptr);
     [[nodiscard]] ps2x::iop::DebugSnapshot iopDebugSnapshot() const;
@@ -493,6 +498,7 @@ private:
     GS m_gs;
     std::unique_ptr<PS2IopHostAdapter> m_iopHost;
     std::unique_ptr<ps2x::iop::IopSubsystem> m_iopSubsystem;
+    bool m_rawSifCompletionAssist = false;
     PS2AudioBackend m_audioBackend;
     PSPadBackend m_padBackend;
     PS2RomDevice m_romDevice;

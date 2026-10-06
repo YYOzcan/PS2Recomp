@@ -279,6 +279,8 @@ public:
     void requestStop();
     void postEvent(EeEvent event);
     [[nodiscard]] bool checkpointDue(uint32_t cycles = kGeneratedCheckpointCycles) noexcept;
+    [[nodiscard]] uint64_t checkpointCalls() const noexcept { return m_checkpointCalls; }
+    [[nodiscard]] uint64_t checkpointHits() const noexcept { return m_checkpointHits; }
     void accountCycles(uint32_t cycles) noexcept;
     [[nodiscard]] bool isExecutingGuest() const noexcept;
 
@@ -301,6 +303,7 @@ public:
     void transferIfRequested(bool interruptSafe);
 
     int createSemaphore(int initCount, int maxCount, uint32_t attr, uint32_t option);
+    [[nodiscard]] int lastCreatedSemaphoreId() const noexcept { return m_lastCreatedSemaphoreId; }
     int deleteSemaphore(int id, bool interruptSafe);
     int signalSemaphore(int id, bool interruptSafe);
     int pollSemaphore(int id);
@@ -410,6 +413,7 @@ private:
     int m_nextThreadId = kFirstThreadId;
     int m_nextInvocationThreadId = -1;
     int m_nextSemaphoreId = 1;
+    int m_lastCreatedSemaphoreId = 0;
     int m_nextEventFlagId = 1;
     int m_nextAlarmId = 1;
     int m_nextIntcHandlerId = 1;
@@ -427,6 +431,8 @@ private:
     uint32_t m_pendingEeTimerInterrupts = 0;
     uint64_t m_eeCycle = 0;
     uint64_t m_sliceEndCycle = kDefaultTimeSliceCycles;
+    uint64_t m_checkpointCalls = 0;
+    uint64_t m_checkpointHits = 0;
     std::thread::id m_executorThread{};
     std::atomic<bool> m_running{false};
     std::atomic<bool> m_guestExecuting{false};

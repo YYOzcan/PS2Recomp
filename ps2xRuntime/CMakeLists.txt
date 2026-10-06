@@ -439,7 +439,11 @@ target_sources(ps2_runtime PRIVATE
 
 file(GLOB RUNNER_SRC_FILES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/runner/*.cpp"
+    "/home/yigit/gradius_recomp/output/*.cpp"
 )
+
+# Unity redefinition önleme: output aslı kanonik, src/runner kopyası yedek
+list(REMOVE_ITEM RUNNER_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/runner/register_functions.cpp")
 
 set(RUNNER_MAIN_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/runner/main.cpp")
 set(ROOT_MAIN_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
@@ -461,6 +465,8 @@ else()
         ${RUNNER_SRC_FILES}
     )
 endif()
+
+target_compile_options(ps2EntryRunner PRIVATE -include "/home/yigit/gradius_recomp/output/ps2_all_declarations.h")
 
 if(PS2X_ENABLE_RUNNER_UNITY_BUILD)
     set_target_properties(ps2EntryRunner PROPERTIES
@@ -556,7 +562,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     EnableFastReleaseMode(ps2_runtime)
-    EnableFastReleaseMode(ps2EntryRunner)
+    # EnableFastReleaseMode(ps2EntryRunner) - Disabled LTO on runner to prevent compiler hang on 175k line register_functions
 
     if(WIN32 AND NOT PS2X_SHOW_WINDOWS_CONSOLE)
         if(MSVC)

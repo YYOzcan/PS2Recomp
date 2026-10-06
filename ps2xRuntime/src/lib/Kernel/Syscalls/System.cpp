@@ -320,6 +320,7 @@ namespace ps2_syscalls
 
         trackSifModuleLoadExternal(moduleTag, loaded.moduleId);
         logSifModuleAction("load-buffer-emulated", loaded.moduleId, moduleTag, 1u);
+        std::cerr << "[GoW SifLoadModuleBuffer] tag=" << moduleTag << " -> id=" << loaded.moduleId << std::endl;
         setReturnS32(ctx, loaded.moduleId);
     }
 
@@ -559,19 +560,22 @@ namespace ps2_syscalls
 
         if (runtime)
         {
-            runtime->configureGuestHeap(heapBase, heapLimit);
+            // Keep the runtime HLE allocator in high memory (above heapLimit),
+            // so any HLE stubs calling guestMalloc never touch the game's private heap.
+            runtime->configureGuestHeap(heapLimit, PS2_RAM_SIZE - 0x10000u);
 
             PS2_IF_AGRESSIVE_LOGS({
                 std::cerr << "[SetupHeap]"
                           << " base=0x" << std::hex << heapBaseRaw
                           << " alignedBase=0x" << heapBase
                           << " size=0x" << heapSize
-                          << " runtimeBase=0x" << runtime->guestHeapBase()
-                          << " runtimeEnd=0x" << runtime->guestHeapEnd()
+                          << " gameLimit=0x" << heapLimit
+                          << " hleHeapBase=0x" << runtime->guestHeapBase()
+                          << " hleHeapEnd=0x" << runtime->guestHeapEnd()
                           << std::dec << std::endl;
             });
 
-            setReturnU32(ctx, runtime->guestHeapBase());
+            setReturnU32(ctx, heapBase);
             return;
         }
 
@@ -582,14 +586,9 @@ namespace ps2_syscalls
     void EndOfHeap(uint8_t *rdram, R5900Context *ctx, PS2Runtime *runtime)
     {
         (void)rdram;
-
+        (void)runtime;
         static constexpr uint32_t kDefaultGuestHeapEnd = 0x01F00000u;
-
-        const uint32_t ret = runtime
-                                 ? runtime->guestHeapLimit()
-                                 : kDefaultGuestHeapEnd;
-
-        setReturnU32(ctx, ret);
+        setReturnU32(ctx, kDefaultGuestHeapEnd);
     }
 
     void GetMemorySize(uint8_t *rdram, R5900Context *ctx, PS2Runtime *runtime)
